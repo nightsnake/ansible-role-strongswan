@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -o nounset
+set -o errexit
+
+IP=$(which ip)
+IPTABLES=$(which iptables)
+#PLUTO_MARK_OUT_ARR=(${PLUTO_MARK_OUT//// })
+#PLUTO_MARK_IN_ARR=(${PLUTO_MARK_IN//// })
+
+INT="{{ strongswan_ipsec_if }}"
+VTI_IF="{{ strongswan_vti_if }}" #Будем использовать уникальные xfrm if id
+VTI_LOCAL="$1"
+
+case "${PLUTO_VERB}" in
+         up-client) #эта ветка запускается при поднятии ipsec
+         ip link add "${VTI_IF}" type xfrm dev "${INT}" \
+               if_id "${PLUTO_IF_ID_OUT%%/*}" #Здесь мы создаём интерфейс, дочерний к нашему uplink-интерфейсу и имеющий уникальный ID
+               ip addr add "${VTI_LOCAL}" dev "${VTI_IF}"
+               ip link set "${VTI_IF}" up
+               ${IPTABLES} -t mangle -A FORWARD -o ${VTI_IF} -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+               ${IPTABLES} -t mangle -A POSTROUTING -o ${VTI_IF} -p tcp -m tcp --tcp-flags SYN,RST SYN -m tcpmss --mss 1381:1536 -j TCPMSS --set-mss 1380
+               sysctl -w "net.ipv4.conf.${VTI_IF}.disable_policy=1"  # По рекомендациям strongswan, для избежания дублирующихся лукапов к политикам
+               sysctl -w "net.ipv4.conf.${VTI_IF}.send_redirects=0"
+               sysctl -w "net.ipv4.conf.${VTI_IF}.rp_filter=0"
+
+               ;;
+         down-client) #в случае падения ipsec просто удаляем интерфейс
+               ip link del "${VTI_IF}"
+               ${IPTABLES} -t mangle -D FORWARD -o ${VTI_IF} -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+               ${IPTABLES} -t mangle -D POSTROUTING -o ${VTI_IF} -p tcp -m tcp --tcp-flags SYN,RST SYN -m tcpmss --mss 1381:1536 -j TCPMSS --set-mss 1380
+               ;;
+esac

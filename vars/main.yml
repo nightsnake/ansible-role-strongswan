@@ -1,37 +1,26 @@
 ---
-strongswan_usr: strongswan
-strongswan_grp: strongswan
-strongswan_build_cmd: " --prefix=/usr --sysconfdir=/etc --enable-systemd --enable-swanctl --with-capabilities=libcap --enable-openssl --enable-sqlite --enable-mysql"
-strongswan_temporary_directory: /tmp
+strongswan_package_list: 
+  - strongswan-swanctl 
+  - strongswan-pki 
+  - charon-systemd 
+  - libstrongswan-standard-plugins 
+  - libstrongswan-extra-plugins 
+  - libcharon-extra-plugins 
+  - strongswan 
+  - strongswan-charon 
 
-_build_package_list:
-  default:
-    - gcc
-    - make
-  Debian:
-    - libsystemd-dev
-    - libgmp-dev
-    - libcap-dev
-    - libssl-dev
-    - libsqlite3-dev
-    - default-libmysqlclient-dev
-    - procps
-    - pkg-config
-  RedHat:
-    - systemd-devel
-    - gmp-devel
-    - libcap-devel
-    - openssl-devel
-    - sqlite-devel
-    - mariadb-devel
-    - procps-ng
+strongswan_apparmor_file: /etc/apparmor.d/local/usr.sbin.swanctl
+strongswan_x509ca_dir: /etc/swanctl/x509ca
+strongswan_x509_dir: /etc/swanctl/x509
+strongswan_x509private_dir: /etc/swanctl/private
+strongswan_cert_dir: /opt/certbot/certs
 
-build_package_list: "{{ _build_package_list['default'] + _build_package_list[ansible_os_family] }}"
+strongswan_x509ca_list:
+  - https://letsencrypt.org/certs/2024/e6.pem
+  - https://letsencrypt.org/certs/isrg-root-x2.pem
+  - https://letsencrypt.org/certs/2024/e5.pem
+  - https://letsencrypt.org/certs/2024/r10.pem 
+  - https://letsencrypt.org/certs/2024/r11.pem
+  - https://letsencrypt.org/certs/isrg-root-x1-cross-signed.pem
 
-letsencrypt_ssl_certs:
-  - {
-      fqdn: "{{ vpn_hostname }}",
-      privkey: "/etc/letsencrypt/live/{{ vpn_hostname }}/privkey.pem",
-      cert: "/etc/letsencrypt/live/{{ vpn_hostname }}/cert.pem",
-      chain: "/etc/letsencrypt/live/{{ vpn_hostname }}/chain.pem",
-    }
+

@@ -1,0 +1,29 @@
+- name: Copy apparmor config
+  template:
+    src: usr.sbin.swanctl.j2
+    dest: "{{ strongswan_apparmor_file }}"
+    owner: root
+    group: root
+    mode: 0644
+        
+- name: apparmor | allow to read certificates
+  command: apparmor_parser -R /etc/apparmor.d/local/usr.sbin.swanctl
+  changed_when: false
+
+- name: Download CA certificates
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: "{{ strongswan_x509ca_dir }}"
+    mode: '0440'  
+  loop: "{{ strongswan_x509ca_list }}"
+
+- name: Create link to LE certificates
+  ansible.builtin.file:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    owner: root
+    group: root
+    state: link  
+  loop:
+    - { src: "{{ strongswan_cert_dir }}/{{ strongswan_key_file }}", dest: "{{ strongswan_x509private_dir }}/{{ strongswan_key_file }}" }
+    - { src: "{{ strongswan_cert_dir }}/{{ strongswan_cert_file }}", dest: "{{ strongswan_x509_dir }}/{{ strongswan_cert_file }}" }    
