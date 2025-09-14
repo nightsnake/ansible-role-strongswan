@@ -21,6 +21,10 @@ strongswan_x509ca_list:
   - https://letsencrypt.org/certs/2024/e5.pem
   - https://letsencrypt.org/certs/2024/r10.pem 
   - https://letsencrypt.org/certs/2024/r11.pem
-  - https://letsencrypt.org/certs/isrg-root-x1-cross-signed.pem
+  - https://letsencrypt.org/certs/isrgrootx1.pem
+  - https://letsencrypt.org/certs/2024/e8.pem
+  - https://letsencrypt.org/certs/2024/e7.pem
+  - https://letsencrypt.org/certs/2024/r13.pem
+  - https://letsencrypt.org/certs/2024/r12.pem
 
 

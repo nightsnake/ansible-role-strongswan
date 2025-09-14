@@ -3,14 +3,14 @@ strongswan_letsencrypt_enable: true
 
 strongswan_download_cert: false
 strongswan_upload_cert: false
-
+strongswan_apparmor_enabled: false
 strongswan_swanctl_root_dir: "/etc/swanctl"
 strongswan_swanctl_config_dir: "/etc/swanctl/conf.d"
 strongswan_swanctl_scripts_dir: "/etc/swanctl/scripts"
 strongswan_swanctl_svc: "strongswan.service"
 strongswan_conf_file: "/etc/strongswan.conf"
 strongswan_swanctl_config_file: "{{ strongswan_swanctl_config_dir }}/swanctl.conf"
-strongswan_swanctl_updown_file: "{{ strongswan_swanctl_config_dir }}/updown.sh"
+strongswan_swanctl_updown_file: "{{ strongswan_swanctl_scripts_dir }}/updown.sh"
 strongswan_key_file: "{{ hostname }}.key"
 strongswan_cert_file: "{{ hostname }}.pem"
 strongswan_ipsec_if: "eth0"
@@ -19,7 +19,7 @@ strongswan_settings:
   swanctl:
     load: pem pkcs1 x509 revocation constraints pubkey openssl random
   charon-systemd:
-    load: aesni aes rc2 sha2 sha1 md5 mgf1 random nonce x509 revocation constraints pubkey pkcs1 pkcs7 pkcs12 pgp dnskey sshkey pem openssl pkcs8 fips-prf gmp agent xcbc hmac gcm drbg attr kernel-netlink resolve socket-default connmark stroke updown eap-mschapv2 xauth-generic counters vici
+    load: aesni aes rc2 sha2 sha1 md5 mgf1 kdf random nonce x509 revocation constraints pubkey pkcs1 pkcs7 pkcs12 pgp dnskey sshkey pem openssl pkcs8 fips-prf gmp agent xcbc hmac gcm drbg attr kernel-netlink resolve socket-default connmark stroke updown eap-mschapv2 xauth-generic counters vici
 
 strongswan_swanctl_connections: []
 strongswan_conn_list: []
