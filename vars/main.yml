@@ -1,12 +1,4 @@
 ---
-strongswan_package_list: 
-  - strongswan-swanctl 
-  - strongswan-pki 
-  - charon-systemd 
-  - libstrongswan-standard-plugins 
-  - libstrongswan-extra-plugins 
-  - libcharon-extra-plugins 
-  - strongswan 
 #  - strongswan-charon 
 
 strongswan_apparmor_file: /etc/apparmor.d/local/usr.sbin.swanctl

@@ -1,15 +1,3 @@
-- name: Copy apparmor config
-  template:
-    src: usr.sbin.swanctl.j2
-    dest: "{{ strongswan_apparmor_file }}"
-    owner: root
-    group: root
-    mode: 0644
-        
-- name: apparmor | allow to read certificates
-  command: apparmor_parser -R /etc/apparmor.d/local/usr.sbin.swanctl
-  changed_when: false
-
 - name: Download CA certificates
   ansible.builtin.get_url:
     url: "{{ item }}"

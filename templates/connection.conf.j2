@@ -1,0 +1,40 @@
+# {{ ansible_managed }}
+# StrongSwan connection: {{ item.name }}
+
+connections {
+  {{ item.name }} {
+    local_addrs = {{ item.connection.local_addrs }}
+    remote_addrs = {{ item.connection.remote_addrs }}
+    version = {{ item.connection.version | default(strongswan_connection_defaults.version) }}
+    fragmentation = {{ item.connection.fragmentation | default(strongswan_connection_defaults.fragmentation) }}
+    mobike = {{ item.connection.mobike | default(strongswan_connection_defaults.mobike) }}
+    rekey_time = {{ item.connection.rekey_time | default(strongswan_connection_defaults.rekey_time) }}
+    dpd_delay = {{ item.connection.dpd_delay | default(strongswan_connection_defaults.dpd_delay) }}
+    send_cert = {{ item.connection.send_cert | default(strongswan_connection_defaults.send_cert) }}
+    proposals = {{ item.connection.proposals | default(strongswan_connection_defaults.proposals) }}
+    local {
+      auth = {{ item.connection.local.auth | default(strongswan_connection_defaults.local.auth) }}
+      certs = {{ item.connection.local.certs }}
+      id = {{ item.connection.local.id }}
+    }
+    remote {
+      auth = {{ item.connection.remote.auth | default(strongswan_connection_defaults.remote.auth) }}
+      id = {{ item.connection.remote.id }}
+    }
+    children {
+{% for child_name, child_config in item.connection.children.items() %}
+      {{ child_name }} {
+        local_ts = {{ child_config.local_ts }}
+        remote_ts = {{ child_config.remote_ts }}
+        start_action = {{ child_config.start_action | default(strongswan_connection_defaults.children_defaults.start_action) }}
+        dpd_action = {{ child_config.dpd_action | default(strongswan_connection_defaults.children_defaults.dpd_action) }}
+        rekey_time = {{ child_config.rekey_time | default(strongswan_connection_defaults.children_defaults.rekey_time) }}
+        esp_proposals = {{ child_config.esp_proposals | default(strongswan_connection_defaults.children_defaults.esp_proposals) }}
+        updown = {{ child_config.updown }}
+        if_id_out = {{ child_config.if_id_out }}
+        if_id_in = {{ child_config.if_id_in }}
+      }
+{% endfor %}
+    }
+  }
+}

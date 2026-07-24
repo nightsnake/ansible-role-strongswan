@@ -1,6 +1,10 @@
 ---
 - include_tasks: install.yml
 
+- include_tasks: disable_starter.yml
+
+- include_tasks: apparmor.yml
+
 - include_tasks: letsencrypt.yml
 
 - include_tasks: config.yml

@@ -1,3 +1,40 @@
 # {{ ansible_managed }}
-# {{ strongswan_conf_file }} - StrongSwan configuration file
-{{ strongswan_settings | to_nice_json | replace(':', ' =') | replace('"', '') | replace('= {', '{') | regex_replace('^{', '') | regex_replace('}$', '') |  regex_replace(',\n', '\n') | replace('inc =', '') }}
+# strongSwan main configuration file
+
+# Глобальные настройки
+swanctl {
+    load = {{ strongswan_module_settings.swanctl.load }}
+}
+
+# Основная конфигурация charon
+charon {
+    # Загрузка плагинов
+    load = {{ strongswan_module_settings.charon.load }}
+    
+    # Базовые настройки
+    dpd_delay = {{ strongswan_module_settings.charon.dpd_delay }}
+    dpd_action = {{ strongswan_module_settings.charon.dpd_action }}
+    retransmit_timeout = {{ strongswan_module_settings.charon.retransmit_timeout }}
+    retransmit_tries = {{ strongswan_module_settings.charon.retransmit_tries }}
+    mobike = {{ strongswan_module_settings.charon.mobike }}
+    
+    # Конфигурация плагинов
+    plugins {
+        # Подключение стандартных конфигураций плагинов
+        include strongswan.d/charon/*.conf
+        
+        # Конфигурация пользовательских плагинов из strongswan_plugins_config
+        {% if strongswan_plugins_config is defined and strongswan_plugins_config | length > 0 %}
+        {% for plugin, config in strongswan_plugins_config.items() %}
+        {{ plugin }} {
+            {% for key, value in config.items() %}
+            {{ key }} = {{ value }}
+            {% endfor %}
+        }
+        {% endfor %}
+        {% endif %}
+    }
+}
+
+# Подключение стандартных конфигураций
+include strongswan.d/*.conf

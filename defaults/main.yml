@@ -1,13 +1,10 @@
 ---
 strongswan_letsencrypt_enable: true
 
-strongswan_download_cert: false
-strongswan_upload_cert: false
 strongswan_apparmor_enabled: false
 strongswan_swanctl_root_dir: "/etc/swanctl"
-strongswan_swanctl_config_dir: "/etc/swanctl/conf.d"
-strongswan_swanctl_scripts_dir: "/etc/swanctl/scripts"
-strongswan_swanctl_svc: "strongswan.service"
+strongswan_swanctl_config_dir: "{{ strongswan_swanctl_root_dir }}/conf.d"
+strongswan_swanctl_scripts_dir: "{{ strongswan_swanctl_root_dir }}/scripts"
 strongswan_conf_file: "/etc/strongswan.conf"
 strongswan_swanctl_config_file: "{{ strongswan_swanctl_config_dir }}/swanctl.conf"
 strongswan_swanctl_updown_file: "{{ strongswan_swanctl_scripts_dir }}/updown.sh"
@@ -15,40 +12,59 @@ strongswan_key_file: "{{ hostname }}.key"
 strongswan_cert_file: "{{ hostname }}.pem"
 strongswan_ipsec_if: "eth0"
 strongswan_vti_if: "vti-${PLUTO_IF_ID_OUT}"
-strongswan_settings:
-  swanctl:
-    load: pem pkcs1 x509 revocation constraints pubkey openssl random
-  charon-systemd:
-    load: aesni aes rc2 sha2 sha1 md5 mgf1 kdf random nonce x509 revocation constraints pubkey pkcs1 pkcs7 pkcs12 pgp dnskey sshkey pem openssl pkcs8 fips-prf gmp agent xcbc hmac gcm drbg attr kernel-netlink resolve socket-default connmark stroke updown eap-mschapv2 xauth-generic counters vici
 
-strongswan_swanctl_connections: []
+# Оптимизированный набор плагинов для site-to-site с сертификатами
+strongswan_module_settings:
+  swanctl:
+    load: "pem x509 pubkey openssl random vici"
+  charon:
+    load: "random nonce aesni aes sha1 sha2 md5 gcm hmac kdf vici kernel-netlink socket-default connmark updown x509 revocation constraints pubkey pkcs1 pkcs8 pem openssl gmp"
+    dpd_delay: "60"
+    dpd_action: "restart"
+    retransmit_timeout: "4"
+    retransmit_tries: "5"
+    mobike: "no"
+
+# Включение конфигурации отдельных плагинов
+strongswan_plugins_config: {}
+# Пример:
+# strongswan_plugins_config:
+#   bypass-lan:
+#     interfaces_use: eth0
+#     # other options...
+
+# Настройки по умолчанию для всех соединений
+strongswan_connection_defaults:
+  version: 2
+  fragmentation: "yes"
+  mobike: "no"
+  rekey_time: 0s
+  dpd_delay: 60s
+  send_cert: always
+  proposals: chacha20poly1305-sha512-curve25519-prfsha512,aes256gcm16-sha384-prfsha384-ecp384
+  local:
+    auth: pubkey
+  remote:
+    auth: pubkey
+  children_defaults:
+    start_action: start
+    dpd_action: restart
+    rekey_time: 0s
+    esp_proposals: chacha20poly1305-sha512,aes256gcm16-ecp384,aes256-sha256
+
+# Список соединений (должен быть переопределен)
 strongswan_conn_list: []
 
-__strongswan_swanctl_connections:
-  connections:
-    ikev2-eap:
-      version: 2
-      rekey_time: 0s
-      encap: yes
-      pools: primary-pool-ipv4
-      dpd_delay: 30s
-      local-1:
-        certs: cert.pem
-        id: myid
-      remote-1:
-        auth: eap-dynamic
-        eap_id: "%any"
-      children:
-        ikev2-eap:
-          local_ts: 0.0.0.0/0,::/0
-          rekey_time: 0s
-          dpd_action: clear
-  pools:
-    primary-pool-ipv4:
-      addrs: 192.168.252.0/24
-  secrets:
-    eap-user:
-      id: user
-      secret: Ar3e73tTnp02
+# Отключение устаревшего демона
+strongswan_disable_starter: true
 
 skip_apparmor_selinux: true
+
+strongswan_package_list: 
+  - strongswan-swanctl 
+  - strongswan-pki 
+  - charon-systemd 
+  - libstrongswan-standard-plugins 
+  - libstrongswan-extra-plugins 
+  - libcharon-extra-plugins 
+  - strongswan 

@@ -1,0 +1,19 @@
+# tasks/main.yml - добавляем после установки пакетов
+- name: Disable and stop strongswan-starter service
+  ansible.builtin.systemd:
+    name: strongswan-starter
+    state: stopped
+    enabled: no
+  when: 
+    - ansible_facts['service_mgr'] == 'systemd'
+    - strongswan_disable_starter | default(true) | bool
+  register: starter_disabled
+  ignore_errors: true
+
+- name: Mask strongswan-starter to prevent accidental start
+  ansible.builtin.systemd:
+    name: strongswan-starter
+    masked: true
+  when: 
+    - ansible_facts['service_mgr'] == 'systemd'
+    - starter_disabled is succeeded

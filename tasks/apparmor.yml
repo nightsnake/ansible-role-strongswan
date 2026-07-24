@@ -1,0 +1,13 @@
+- name: Copy apparmor config
+  template:
+    src: usr.sbin.swanctl.j2
+    dest: "{{ strongswan_apparmor_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  when: strongswan_apparmor_enabled
+        
+- name: apparmor | allow to read certificates
+  command: apparmor_parser -r /etc/apparmor.d/usr.sbin.swanctl
+  changed_when: false
+  when: strongswan_apparmor_enabled

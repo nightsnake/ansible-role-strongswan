@@ -1,5 +1,66 @@
 # {{ ansible_managed }}
-# {{ strongswan_swanctl_config_file }} - StrongSwan swanctl configuration file
+# strongSwan swanctl configuration
 
+connections {
+{% for conn_name, conn_config in strongswan_swanctl_settings.connections.items() %}
+  {{ conn_name }} {
+    {% for key, value in conn_config.items() %}
+      {% if key not in ['local', 'remote', 'children'] %}
+        {{ key }} = {{ value }}
+      {% endif %}
+    {% endfor %}
+    
+    {% if conn_config.local is defined %}
+    local {
+      {% for key, value in conn_config.local.items() %}
+        {{ key }} = {{ value }}
+      {% endfor %}
+    }
+    {% endif %}
+    
+    {% if conn_config.remote is defined %}
+    remote {
+      {% for key, value in conn_config.remote.items() %}
+        {{ key }} = {{ value }}
+      {% endfor %}
+    }
+    {% endif %}
+    
+    {% if conn_config.children is defined %}
+    children {
+      {% for child_name, child_config in conn_config.children.items() %}
+      {{ child_name }} {
+        {% for key, value in child_config.items() %}
+          {{ key }} = {{ value }}
+        {% endfor %}
+      }
+      {% endfor %}
+    }
+    {% endif %}
+  }
+{% endfor %}
+}
 
-{{ item.connection | to_nice_json | replace(':', ' =') | replace('"', '') | replace('= {', '{') | regex_replace('^{', '') | regex_replace('}$', '') |  regex_replace(',\n', '\n') | regex_replace(',', '') }}
+{% if strongswan_swanctl_settings.pools is defined %}
+pools {
+  {% for pool_name, pool_config in strongswan_swanctl_settings.pools.items() %}
+  {{ pool_name }} {
+    {% for key, value in pool_config.items() %}
+      {{ key }} = {{ value }}
+    {% endfor %}
+  }
+  {% endfor %}
+}
+{% endif %}
+
+{% if strongswan_swanctl_settings.secrets is defined %}
+secrets {
+  {% for secret_name, secret_config in strongswan_swanctl_settings.secrets.items() %}
+  {{ secret_name }} {
+    {% for key, value in secret_config.items() %}
+      {{ key }} = {{ value }}
+    {% endfor %}
+  }
+  {% endfor %}
+}
+{% endif %}

@@ -5,8 +5,22 @@
     dest: "{{ strongswan_conf_file }}"
     owner: root
     group: root
-    mode: 0644
-  when: strongswan_settings is defined
+    mode: '0644'
+  when: strongswan_module_settings is defined
+  notify: Restart strongswan
+
+- name: Create conf.d directory
+  file:
+    path: "{{ strongswan_swanctl_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  
+- name: Ensure folder for updown script exists
+  ansible.builtin.file:
+    path: "{{ strongswan_swanctl_scripts_dir }}"
+    state: directory
 
 - name: Configure Strongswan updown script
   template:
@@ -14,24 +28,40 @@
     dest: "{{ strongswan_swanctl_updown_file }}"
     owner: root
     group: root
-    mode: 0755
+    mode: '0755'
   notify:
-    - swanctl restart
+    - Restart strongswan
+
+- name: Generate connection configs
+  template:
+    src: connection.conf.j2
+    dest: "{{ strongswan_swanctl_config_dir }}/{{ item.name }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ strongswan_conn_list }}"
+  notify: Reload swanctl
+  when: strongswan_conn_list | length > 0
+
+- name: Remove old connection configs
+  find:
+    paths: "{{ strongswan_swanctl_config_dir }}"
+    patterns: "*.conf"
+    excludes: "{{ strongswan_conn_list | map(attribute='name') | map('regex_replace', '^(.*)$', '\\1.conf') | list }}"
+  register: old_configs
+  when: strongswan_conn_list | length > 0
+
+- name: Delete orphaned connection configs
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ old_configs.files }}"
+  when: old_configs.files | length > 0
+  notify: Reload swanctl
 
 - name: Ensure Strongswan service is enabled and started
   systemd:
     name: "{{ strongswan_swanctl_svc }}"
     state: started
-    enabled: yes
-    daemon_reload: yes
-
-- name: Configure Strongswan connections
-  template:
-    src: swanctl.conf.j2
-    dest: "{{ item.name }}"
-    owner: root
-    group: root
-    mode: 0644
-  loop: "{{ strongswan_conn_list }}"
-  notify:
-    - swanctl loadconn
+    enabled: true
+    daemon_reload: true

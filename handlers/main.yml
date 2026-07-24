@@ -1,12 +1,14 @@
 ---
-- name: swanctl restart
+- name: Restart strongswan
   systemd:
-    name: "{{ strongswan_swanctl_svc }}"
+    name: strongswan
     state: restarted
-
-- name: swanctl loadconn
-  command: swanctl --load-conns
-
-- name: systemctl daemon-reload
-  systemd:
     daemon_reload: yes
+  when: ansible_service_mgr == 'systemd'
+
+- name: Reload swanctl
+  command: swanctl --load-all
+  listen: reload swanctl
+  register: reload_result
+  changed_when: reload_result.rc == 0
+  failed_when: reload_result.rc != 0
