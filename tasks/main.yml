@@ -6,5 +6,6 @@
 - include_tasks: apparmor.yml
 
 - include_tasks: letsencrypt.yml
+  when: strongswan_letsencrypt_enable is true
 
 - include_tasks: config.yml

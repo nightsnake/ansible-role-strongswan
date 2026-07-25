@@ -1,5 +1,5 @@
 ---
-strongswan_letsencrypt_enable: true
+strongswan_letsencrypt_enable: false
 
 strongswan_apparmor_enabled: false
 strongswan_swanctl_root_dir: "/etc/swanctl"
